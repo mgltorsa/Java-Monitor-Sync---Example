@@ -40,8 +40,9 @@ public class Student extends Thread {
                         monitor.attend(this);
                         sleep(time);
                         monitor.desattend();
+                        monitorSemaphore.release();
                     }
-                    else if (monitorSemaphore.availablePermits() == 0 && waitRoomSemaphore.availablePermits() > 0) {
+                    else if (monitorSemaphore.availablePermits() == 0) {
                     	waitRoomSemaphore.acquire();
 
                     } else {

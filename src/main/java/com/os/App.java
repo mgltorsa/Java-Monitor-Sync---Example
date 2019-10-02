@@ -13,7 +13,7 @@ public class App
 {
     public static void main( String[] args )
     {
-    	//true for using FIFO
+    	  //true for using FIFO
         Semaphore waitRoom = new Semaphore(0, true);
         
         //A binary semaphore
