@@ -11,43 +11,80 @@ public class Monitor extends Thread {
 
 	private Semaphore sleepSemaphore;
 
+	private Semaphore monitorSemaphore;
+
 	private Semaphore waitRoom;
 
-	public Monitor(Semaphore waitRoom) {
+	private boolean verbose;
+
+	public Monitor(Semaphore waitRoom, Semaphore monitorSemaphore, boolean verbose) {
 		this.waitRoom = waitRoom;
-		this.sleepSemaphore = new Semaphore(0);
+		this.sleepSemaphore = new Semaphore(1);
+		this.monitorSemaphore = monitorSemaphore;
+		this.verbose = verbose;
+	}
+
+	public boolean isBusy() {
+		return monitorSemaphore.availablePermits() == 0;
 	}
 
 	public void attend(Student student) {
-		this.currentStudent = student;
+		try {
+			monitorSemaphore.acquire();
+			this.currentStudent = student;
+			if (verbose) {
+				System.out.println("Entra estudiante ->" + student.getStudentName());
+			}
+
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
 	}
 
 	public void desattend() {
+		if (verbose) {
+			System.out.println("Monitor termina de atender a -> " + currentStudent.getStudentName());
+		}
 		this.currentStudent = null;
-		System.out.println("Monitor terminated to attend the student - " + currentStudent.getName());
+		if (verbose) {
+			System.out.println("Hay estudiantes en la cola");
+		}
+		waitRoom.release();
+		if (verbose) {
+			System.out.println(waitRoom.availablePermits());
+			System.out.println("El monitor hizo pasar a un estudiante de la cola");
+		}
+		monitorSemaphore.release();
+
 	}
-	
+
 	public void toSleep() {
 		try {
+			// Set sem in red
 			sleepSemaphore.acquire();
+
+			if (verbose) {
+				System.out.println("Monitor va a dormir");
+			}
+
+			// wait release
+			sleepSemaphore.acquire();
+
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
+
 	public boolean isSleep() {
-		return sleepSemaphore.availablePermits()==0;
+		return sleepSemaphore.availablePermits() == 0;
 	}
-	
-	
+
 	public void awake() {
 		sleepSemaphore.release();
-		try {
-			sleepSemaphore.acquire();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if (verbose) {
+			System.out.println("El monitor fue despertado");
 		}
 	}
 
@@ -56,21 +93,21 @@ public class Monitor extends Thread {
 		try {
 			while (true) {
 				while (currentStudent == null) {
-					System.out.println("Monitor is sleeping");
 					toSleep();
 				}
 
 				while (currentStudent != null) {
-					System.out.println("Monitor is attending the student - " + currentStudent.getName());
+					if (verbose) {
+						System.out.println("Monitor esta atendiendo a " + currentStudent.getStudentName());
+					}
+					sleep(100);
 				}
 
-				if (waitRoom.hasQueuedThreads()) {
-					waitRoom.release();
-				}
 			}
 
 		} catch (Exception e) {
 			// TODO: handle exception
+			e.printStackTrace();
 		}
 	}
 }

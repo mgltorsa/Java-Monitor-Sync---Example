@@ -1,71 +1,83 @@
 package com.os.model;
 
 import java.util.Random;
-import java.util.concurrent.Semaphore;
 
 /**
  * Student
  */
 public class Student extends Thread {
 
+	private Room room;
 
-    private Semaphore waitRoomSemaphore;
+	private String name;
 
-    private Semaphore monitorSemaphore;
+	private Random rand;
 
-    private String name;
+	private Monitor monitor;
 
-    private Random rand;
+	private boolean verbose;
 
-    private Monitor monitor;
+	public Student(String name, Random rand, Monitor monitor, Room room, boolean verbose) {
+		this.name = name;
+		this.room = room;
+		this.rand = rand;
+		this.monitor = monitor;
+		this.verbose = verbose;
 
+	}
 
-    public Student(String name, Random rand, Monitor monitor ,Semaphore waitRoom, Semaphore monitorSempahore) {
-        this.name = name;
-        this.waitRoomSemaphore = waitRoom;
-        this.monitorSemaphore = monitorSempahore;
+	@Override
+	public void run() {
+		try {
 
-    }
+			while (true) {
+				int decision = rand.nextInt(2);
+				int millis = rand.nextInt(100);
+				if (decision == 0) {
 
-    @Override
-    public void run() {
-        try {
-            int decision = rand.nextInt(2);
-            switch (decision) {
-                // Monitor
-                case 0:
-                    if(monitorSemaphore.availablePermits()>0){
-                    	monitorSemaphore.acquire();
-                        int time = rand.nextInt(1000);
-                        monitor.attend(this);
-                        sleep(time);
-                        monitor.desattend();
-                        monitorSemaphore.release();
-                    }
-                    else if (monitorSemaphore.availablePermits() == 0) {
-                    	waitRoomSemaphore.acquire();
+					if (!monitor.isBusy()) {
+						// to acquire
+						monitor.attend(this);
+						if (monitor.isSleep()) {
+							monitor.awake();
+						}
+						millis = rand.nextInt(1000);
+						sleep(millis);
+						monitor.desattend();
+					} else {
+						if (room.availableSites()) {
+							room.enqueue(this);
+							// use the queue semaphore
+							if (verbose) {
+								System.out.println(name + " fue encolado");
+							}
+						} else {
+							if (verbose) {
+								System.out.println(name + " fue a sala de computo");
+							}
+							millis = rand.nextInt(1000);
+							sleep(millis);
 
-                    } else {
-                        int sleepTime = rand.nextInt(1000);
-                        sleep(sleepTime);
-                    }
-                    break;
+						}
+					}
 
-                // Sala de computo
-                case 1:
-                    int sleepTime = rand.nextInt(1000);
-                    sleep(sleepTime);
-                    break;
-            }
-        } catch (Exception e) {
-            // TODO: handle exception
-        }
-    }
+				} else {
+					if (verbose) {
+						System.out.println(name + " Fue a sala de computo");
+					}
+					millis = rand.nextInt(1000);
+					sleep(millis);
+				}
 
-    
-    public String getStudentName() {
-        return name;
-    }
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+	}
 
+	public String getStudentName() {
+		return name;
+	}
 
 }
