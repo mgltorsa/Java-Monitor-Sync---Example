@@ -25,6 +25,7 @@ public class Monitor extends Thread {
 	}
 
 	public boolean isBusy() {
+		//if semaphore doesn't have permits
 		return monitorSemaphore.availablePermits() == 0;
 	}
 
@@ -50,11 +51,13 @@ public class Monitor extends Thread {
 		if (verbose) {
 			System.out.println("Hay estudiantes en la cola");
 		}
+		//prepare a thread waiting in wait room
 		waitRoom.release();
 		if (verbose) {
 			System.out.println(waitRoom.availablePermits());
 			System.out.println("El monitor hizo pasar a un estudiante de la cola");
 		}
+		//indicates that monitor is free
 		monitorSemaphore.release();
 
 	}
@@ -68,7 +71,8 @@ public class Monitor extends Thread {
 				System.out.println("Monitor va a dormir");
 			}
 
-			// wait release
+			// wait release (wait to be awakened)
+			// Set this thread to wait until it be notified
 			sleepSemaphore.acquire();
 
 		} catch (InterruptedException e) {

@@ -33,7 +33,9 @@ public class Room {
 				System.out.println(student.getStudentName() + " Esta esperando");
 			}
 			sites -= 1;
+			//used to set current thread to wait until next release
 			waitSemaphore.acquire();
+			//used to set permits to 0 for wait the next time
 			waitSemaphore.acquire();
 			sites += 1;
 			if (verbose) {

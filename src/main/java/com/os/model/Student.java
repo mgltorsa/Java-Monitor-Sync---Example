@@ -36,18 +36,19 @@ public class Student extends Thread {
 				if (decision == 0) {
 
 					if (!monitor.isBusy()) {
-						// to acquire
+						// used to acquire monitor semaphore and set student
 						monitor.attend(this);
 						if (monitor.isSleep()) {
 							monitor.awake();
 						}
 						millis = rand.nextInt(1000);
 						sleep(millis);
+						//use to release monitor semaphore and unset student
 						monitor.desattend();
 					} else {
 						if (room.availableSites()) {
+							// use the queue into semaphore
 							room.enqueue(this);
-							// use the queue semaphore
 							if (verbose) {
 								System.out.println(name + " fue encolado");
 							}
